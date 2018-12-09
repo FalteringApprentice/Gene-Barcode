@@ -81,8 +81,7 @@ def generate_kmer(k):
 def read():
     '''
     数据读取
-    :param seq:存入的字典
-    :return:无
+    :return:读取的序列字典
     '''
     seqs={}
     with open('hs_ref_GRCh38.p7_chr1.fa') as f:
