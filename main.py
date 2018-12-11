@@ -69,12 +69,11 @@ def generate_kmer(k):
     kmers = [''.join(i) for i in product('AGTC', repeat=k)]
     for i in kmers:
         rc=reverse_complement(i)
-        for j in kmers:
-            if j==rc and j!=rc[::-1]:
-                kmers.remove(j)
-                pairs.append((i,rc))
-            elif j==rc and j==rc[::-1]:
-                pairs.append(i)
+        if rc==i or rc[::-1]==i:
+            pairs.append(i)
+        else:
+            pairs.append((i,rc))
+            kmers.remove(rc)
     return pairs
 
 
@@ -85,8 +84,6 @@ def read():
     '''
     seqs={}
     with open('hs_ref_GRCh38.p7_chr1.fa') as f:
-        curName=''
-        curSeq=''
         buffer=f.read()
         buffer=buffer.split('>')
         buffer.pop(0)
@@ -98,6 +95,7 @@ def read():
             seqs[curName]=curSeq
         f.close()
     return seqs
+
 
 
 def cal_freq(seq,s):
@@ -155,7 +153,7 @@ def map_freq_to_gray(freq,k,L=14):
     return res
 
 
-def barcode(seq,M=1000,k=4):
+def barcode(id,seq,M=1000,k=4):
     '''
     生成基因条形码
     :param seq: 序列
@@ -181,7 +179,7 @@ def barcode(seq,M=1000,k=4):
     for i in range(rownum):
         for j in range(colnum):
             img[i][j][0] = gray_map[i][freq[i][j]]
-    cv.imshow("gene barcode",img)
+    cv.imshow(id,img)
     cv.waitKey(0)
     cv.destroyAllWindows()
 
@@ -189,7 +187,7 @@ def barcode(seq,M=1000,k=4):
 def main():
     seqs = read()
     for id in seqs:
-        barcode(seqs[id])
+        barcode(id,seqs[id])
 
 
 if __name__ =='__main__':
