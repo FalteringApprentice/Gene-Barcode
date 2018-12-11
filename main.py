@@ -2,6 +2,32 @@ import numpy as np
 import cv2 as cv
 from itertools import product
 
+def split_file():
+    '''
+    分割文件，随用随读
+    :return:每个文件名
+    '''
+    seqs=[]
+    with open('hs_ref_GRCh38.p7_chr1.fa') as f:
+        buffer=f.read()
+        buffer=buffer.split('>')
+        buffer.pop(0)
+        for seq in buffer:
+            bodybegin=seq.find('\n')
+            meta=seq[0:bodybegin]
+            curName=meta.split()[0].strip().split('|')[-2]
+            curSeq=seq[bodybegin+1:-1].replace('\n','').strip()
+            seqs.append(curName)
+            out = open('data/%s'%curName, 'w')
+            out.write(curSeq)
+            out.close()
+        f.close()
+        return seqs
+
+def get_seq(id):
+    f=open('data/%s'%id)
+    return f.read()
+
 def cal_N(k):
     if (k % 2) == 0:
         return (4**k+4**(k//2))//2
@@ -77,27 +103,6 @@ def generate_kmer(k):
     return pairs
 
 
-def read():
-    '''
-    数据读取
-    :return:读取的序列字典
-    '''
-    seqs={}
-    with open('hs_ref_GRCh38.p7_chr1.fa') as f:
-        buffer=f.read()
-        buffer=buffer.split('>')
-        buffer.pop(0)
-        for seq in buffer:
-            bodybegin=seq.find('\n')
-            meta=seq[0:bodybegin]
-            curName=meta.split()[0].strip()
-            curSeq=seq[bodybegin+1:-1].replace('\n','').strip()
-            seqs[curName]=curSeq
-        f.close()
-    return seqs
-
-
-
 def cal_freq(seq,s):
     '''
     计算kmer在seq中出现的频率
@@ -152,7 +157,6 @@ def map_freq_to_gray(freq,k,L=14):
         res.append(cur_map)
     return res
 
-
 def barcode(id,seq,M=1000,k=4):
     '''
     生成基因条形码
@@ -180,15 +184,18 @@ def barcode(id,seq,M=1000,k=4):
         for j in range(colnum):
             img[i][j][0] = gray_map[i][freq[i][j]]
     cv.imshow(id,img)
-    cv.waitKey(0)
+    cv.imwrite('data/%s.bmp'%id,img)
     cv.destroyAllWindows()
 
-
 def main():
-    seqs = read()
-    for id in seqs:
-        barcode(id,seqs[id])
+    seqs = split_file()
+    seqs.remove('NT_032977.10')
+    seqs.remove('NT_004487.20')
+    seqs.remove('NT_167186.2')
 
+    for id in seqs:
+        print(id)
+        barcode(id,get_seq(id))
 
 if __name__ =='__main__':
     main()
